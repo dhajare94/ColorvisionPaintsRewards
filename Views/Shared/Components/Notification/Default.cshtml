@@ -1,0 +1,11 @@
+@model int
+
+<a href="/Redemption?status=Pending" class="relative p-2 rounded-lg hover:bg-gray-100 block">
+    <i class="fas fa-bell text-gray-500"></i>
+    @if (Model > 0)
+    {
+        <span class="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full flex justify-center items-center text-[10px] text-white font-bold">
+            @(Model > 99 ? "99+" : Model.ToString())
+        </span>
+    }
+</a>

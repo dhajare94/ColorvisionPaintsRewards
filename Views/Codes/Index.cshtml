@@ -1,0 +1,276 @@
+@{
+    ViewData["Title"] = "Codes Manager";
+}
+@model List<QRRewardPlatform.Models.RedemptionCode>
+
+@{
+    var campaigns = ViewBag.Campaigns as List<QRRewardPlatform.Models.Campaign>;
+    string selectedCampaign = ViewBag.SelectedCampaign ?? "";
+    string selectedBatchName = ViewBag.SelectedBatchName ?? "";
+    string selectedStatus = ViewBag.SelectedStatus ?? "";
+    var uniqueBatchNames = ViewBag.UniqueBatchNames as List<string> ?? new List<string>();
+    var generatedBatch = TempData["GeneratedBatch"] as string;
+}
+
+@if (!string.IsNullOrEmpty(generatedBatch))
+{
+    <!-- Generated Batch Alert -->
+    <div class="glass-card rounded-2xl border border-green-200 shadow-sm p-4 mb-6 bg-green-50 flex items-center justify-between">
+        <div>
+            <h3 class="text-lg font-semibold text-green-900">Successfully Generated Batch: @generatedBatch</h3>
+            <p class="text-sm text-green-700 mt-1">Your QR codes have been created.</p>
+        </div>
+        <a href="/QRCode/ExportBatch?batchId=@generatedBatch" class="px-5 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition flex items-center gap-2">
+            <i class="fas fa-download"></i> Export ZIP
+        </a>
+    </div>
+}
+
+
+
+<!-- Filters -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+    <form method="get" id="filterForm" class="flex flex-wrap items-end gap-4">
+        <div class="flex-1 min-w-48">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Campaign</label>
+            <select name="campaignId" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <option value="">All Campaigns</option>
+                @if (campaigns != null)
+                {
+                    @foreach (var c in campaigns)
+                    {
+                        if (selectedCampaign == c.Id)
+                        {
+                            <option value="@c.Id" selected="selected">@c.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+        <div class="w-48">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Batch Name</label>
+            <select name="batchName" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <option value="">All Batches</option>
+                @foreach (var bn in uniqueBatchNames)
+                {
+                    if (selectedBatchName == bn)
+                    {
+                        <option value="@bn" selected="selected">@bn</option>
+                    }
+                    else
+                    {
+                        <option value="@bn">@bn</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="w-36">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
+            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <option value="">All</option>
+                @if (selectedStatus == "Unused")
+                {
+                    <option value="Unused" selected="selected">Unused</option>
+                }
+                else
+                {
+                    <option value="Unused">Unused</option>
+                }
+                @if (selectedStatus == "Redeemed")
+                {
+                    <option value="Redeemed" selected="selected">Redeemed</option>
+                }
+                else
+                {
+                    <option value="Redeemed">Redeemed</option>
+                }
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition flex items-center shadow-sm">
+                <i class="fas fa-search mr-1"></i> Filter Selection
+            </button>
+            <button type="button" onclick="openModal('generateQrModal')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm">
+                <i class="fas fa-qrcode"></i> Generate QR
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Generate QR Modal -->
+<div id="generateQrModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-2xl overflow-hidden transform transition-all shadow-2xl">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-qrcode text-indigo-600 mr-2"></i>Generate QR Codes</h3>
+            <button onclick="closeModal('generateQrModal')" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" action="/QRCode/Generate">
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Campaign</label>
+                        <select name="campaignId" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="">Select campaign...</option>
+                            @if (campaigns != null)
+                            {
+                                @foreach (var c in campaigns)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Batch Name (Required)</label>
+                        <input type="text" name="batchName" required placeholder="e.g. Diwali Promo 2026" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                        <input type="number" name="count" min="1" max="500" value="10" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button" onclick="closeModal('generateQrModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+                    <i class="fas fa-magic"></i> Generate Codes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div id="bulkActions" class="hidden mb-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-indigo-700 uppercase" id="selectedCountText">0 Selected</span>
+    </div>
+    <form method="post" action="/Codes/BulkDelete" onsubmit="return confirm('Are you sure you want to delete these codes?')">
+        <div id="selectedIdsContainer"></div>
+        <button type="submit" class="px-4 py-2 bg-red-500 text-white text-xs font-black uppercase rounded-lg hover:bg-red-600 transition tracking-widest">
+            Delete Selected
+        </button>
+    </form>
+</div>
+
+<!-- Codes Accordion -->
+<div class="space-y-4">
+    <div class="flex items-center justify-between px-2">
+        <h3 class="font-semibold text-gray-900">Batches & Codes (@Model.Count total codes)</h3>
+        <label class="flex items-center gap-2 text-xs font-medium text-gray-500 cursor-pointer">
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+            Select All Across Batches
+        </label>
+    </div>
+    
+    @foreach (var batchGrp in Model.GroupBy(c => !string.IsNullOrEmpty(c.BatchName) ? c.BatchName : c.BatchId))
+    {
+        var batchKey = batchGrp.Key;
+        var batchCount = batchGrp.Count();
+        <details class="glass-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white mb-4 group" open>
+            <summary class="px-6 py-4 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 flex items-center gap-3 transition">
+                <i class="fas fa-chevron-right text-gray-400 group-open:rotate-90 transition-transform"></i>
+                <i class="fas fa-folder-open text-indigo-500 hover:text-indigo-600"></i>
+                <span class="flex-1">@batchKey</span>
+                <span class="text-xs text-gray-500 font-normal bg-gray-100 px-3 py-1 rounded-full border border-gray-200">@batchCount codes</span>
+                
+                <button type="button" onclick="event.preventDefault(); window.open('/Codes/PrintBatch?batchName=@Uri.EscapeDataString(batchKey)', '_blank')" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition shadow-sm flex items-center gap-1.5 ml-2">
+                    <i class="fas fa-print"></i> Print QR
+                </button>
+            </summary>
+            <div class="overflow-x-auto border-t border-gray-100">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left w-10">
+                                <!-- Group Select -->
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Links</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach (var code in batchGrp)
+                        {
+                            var campName = campaigns?.FirstOrDefault(c => c.Id == code.CampaignId)?.Name ?? code.CampaignId;
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-3">
+                                    <input type="checkbox" name="codeCheck" value="@code.Id" onchange="updateSelection()" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                                </td>
+                                <td class="px-6 py-3 font-mono font-medium text-gray-900">@code.Code</td>
+                                <td class="px-6 py-3 text-gray-600">@campName</td>
+                                <td class="px-6 py-3">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full badge-@code.Status.ToLower()">@code.Status</span>
+                                </td>
+                                <td class="px-6 py-3 text-xs space-y-1">
+                                    <a href="@code.QRUrl" target="_blank" class="block text-indigo-600 hover:text-indigo-800 transition"><i class="fas fa-qrcode mr-1"></i> QR Image</a>
+                                    <a href="/Redeem?code=@code.Code" target="_blank" class="block text-green-600 hover:text-green-800 transition"><i class="fas fa-external-link-alt mr-1"></i> Redeem Link</a>
+                                </td>
+                                <td class="px-6 py-3 text-gray-500 text-xs">@(code.CreatedDate.Length > 10 ? code.CreatedDate[..10] : code.CreatedDate)</td>
+                                <td class="px-6 py-3 text-right">
+                                    <form method="post" action="/Codes/Delete" class="inline" onsubmit="return confirm('Delete this code?')">
+                                        <input type="hidden" name="id" value="@code.Id" />
+                                        <button type="submit" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete Code">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            </details>
+    }
+    
+    @if (!Model.Any())
+    {
+        <div class="glass-card rounded-2xl border border-gray-100 p-12 text-center">
+            <i class="fas fa-barcode text-gray-300 text-4xl mb-3"></i>
+            <p class="text-gray-500">No codes found</p>
+        </div>
+    }
+</div>
+
+<script>
+    function toggleSelectAll(checkbox) {
+        const checks = document.querySelectorAll('input[name="codeCheck"]');
+        checks.forEach(c => c.checked = checkbox.checked);
+        updateSelection();
+    }
+
+    function updateSelection() {
+        const checks = document.querySelectorAll('input[name="codeCheck"]:checked');
+        const count = checks.length;
+        const bulkDiv = document.getElementById('bulkActions');
+        const countText = document.getElementById('selectedCountText');
+        const container = document.getElementById('selectedIdsContainer');
+
+        if (count > 0) {
+            bulkDiv.classList.remove('hidden');
+            countText.innerText = `${count} Selected`;
+            
+            // Clear and rebuild hidden inputs
+            container.innerHTML = '';
+            checks.forEach(c => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedIds';
+                input.value = c.value;
+                container.appendChild(input);
+            });
+        } else {
+            bulkDiv.classList.add('hidden');
+        }
+    }
+</script>

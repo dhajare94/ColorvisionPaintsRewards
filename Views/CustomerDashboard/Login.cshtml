@@ -1,0 +1,245 @@
+@{
+    Layout = "_RedeemLayout";
+    ViewData["Title"] = "Customer Login";
+}
+
+<style>
+    :root {
+        --primary: #3b82f6;
+        --secondary: #6366f1;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: #1e293b;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23);
+    }
+</style>
+
+<main class="min-h-screen flex flex-col items-center justify-center p-6 sm:p-12">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-10">
+            <img src="/images/logo.png" alt="Colorvision Paints" class="h-16 mx-auto mb-2" />
+            <div class="h-1 w-12 bg-primary mx-auto rounded-full mt-4"></div>
+        </div>
+
+        <div class="text-center space-y-2 mb-10">
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Welcome Back</h1>
+            <p class="text-slate-500 font-medium">Access your personal rewards dashboard.</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <!-- Step 1: Mobile Entry -->
+            <div id="step1">
+                <div class="relative mb-6">
+                    <label class="absolute -top-3 left-4 bg-white px-2 text-[10px] font-black text-primary uppercase tracking-widest">Mobile Number</label>
+                    <input type="tel" id="mobileNumber" placeholder="9876543210" maxlength="10" 
+                        class="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-xl font-bold tracking-[0.1em] focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-200" required />
+                </div>
+                <!-- Captcha Container (for MSG91) -->
+                <div id="captcha-container" class="mb-6 flex justify-center"></div>
+                
+                <button type="button" id="sendOtpBtn" class="btn-primary w-full py-5 rounded-2xl text-white font-bold text-lg uppercase tracking-widest">
+                    Get OTP
+                </button>
+            </div>
+
+            <!-- Step 2: OTP Entry (Hidden by default) -->
+            <div id="step2" class="hidden space-y-6">
+                <div class="text-center mb-4">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">OTP sent to <span id="displayMobile" class="text-primary"></span></p>
+                </div>
+                <div class="relative">
+                    <label class="absolute -top-3 left-4 bg-white px-2 text-[10px] font-black text-primary uppercase tracking-widest">Enter OTP</label>
+                    <input type="text" id="otpValue" placeholder="      " maxlength="6" 
+                        class="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-2xl font-black text-center tracking-[1em] focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all placeholder:text-slate-200" />
+                </div>
+                
+                <button type="button" id="verifyOtpBtn" class="btn-primary w-full py-5 rounded-2xl text-white font-bold text-lg uppercase tracking-widest">
+                    Verify & Login
+                </button>
+
+                <div class="text-center">
+                    <button type="button" id="retryOtpBtn" class="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-primary transition-colors">
+                        Resend OTP
+                    </button>
+                </div>
+            </div>
+        </form>
+        <div class="mt-12 text-center flex flex-col gap-4">
+            <a href="/Redeem" class="text-primary font-bold text-xs uppercase tracking-widest hover:opacity-80 transition-opacity">
+                Back to Redeem Page
+            </a>
+            <p class="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
+                Developed by Informa Pavilion
+            </p>
+        </div>
+    </div>
+</main>
+<script type="text/javascript">
+    var configuration = {
+        widgetId: "366374625365363039353736",
+        tokenAuth: "501774Tvzr6mOpgQ69bcb51eP1",
+        identifier: "",
+        exposeMethods: true,
+        captchaRenderId: 'captcha-container',
+        success: (data) => {
+            console.log('Main success (ignored due to verifyOtp success listener)', data);
+        },
+        failure: (error) => {
+            console.log('Main failure', error);
+        }
+    };
+
+    // Initialize MSG91 SDK
+    (function loadOtpScript(urls) {
+        let i = 0;
+        function attempt() {
+            const s = document.createElement('script');
+            s.src = urls[i];
+            s.async = true;
+            s.onload = () => {
+                console.log('MSG91 SDK loaded, initializing...');
+                if (typeof window.initSendOTP === 'function') {
+                    window.initSendOTP(configuration);
+                }
+            };
+            s.onerror = () => {
+                i++;
+                if (i < urls.length) attempt();
+            };
+            document.head.appendChild(s);
+        }
+        attempt();
+    })([
+        'https://verify.msg91.com/otp-provider.js',
+        'https://verify.phone91.com/otp-provider.js'
+    ]);
+
+    // UI Logic
+    document.getElementById('sendOtpBtn').addEventListener('click', function() {
+        const mobile = document.getElementById('mobileNumber').value;
+        if (mobile.length !== 10) {
+            alert("Please enter a valid 10-digit mobile number.");
+            return;
+        }
+
+        this.disabled = true;
+        this.innerText = "Sending...";
+
+        // Call MSG91 Exposed Method
+        if (typeof window.sendOtp === 'function') {
+            window.sendOtp('91' + mobile, (data) => {
+                console.log('OTP sent successfully', data);
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                document.getElementById('displayMobile').innerText = mobile;
+            }, (error) => {
+                console.error('Send OTP error', error);
+                alert("Failed to send OTP: " + (error.message || "Please check your number or try again later."));
+                this.disabled = false;
+                this.innerText = "Get OTP";
+            });
+        } else {
+            alert("OTP service not ready. Please wait.");
+            this.disabled = false;
+            this.innerText = "Get OTP";
+        }
+    });
+
+    document.getElementById('verifyOtpBtn').addEventListener('click', function() {
+        const otp = document.getElementById('otpValue').value;
+        if (otp.length < 4) {
+            alert("Please enter the 4-6 digit OTP.");
+            return;
+        }
+
+        this.disabled = true;
+        this.innerText = "Verifying...";
+
+        // Call MSG91 Exposed Method
+        if (typeof window.verifyOtp === 'function') {
+            window.verifyOtp(otp, async (data) => {
+                console.log('OTP verified successfully', data);
+                // DEBUG: Show user the response structure if they are in the console
+                console.table(data);
+
+                // MSG91 returns the secure token in different fields depending on the widget version
+                const accessToken = data.message || data.token || (data.data ? data.data.token : null);
+                
+                if (accessToken) {
+                    await verifyTokenOnBackend(accessToken);
+                } else {
+                    alert("Verification success but secure token missing. Please try again.");
+                    this.disabled = false;
+                    this.innerText = "Verify & Login";
+                }
+            }, (error) => {
+                console.error('Verify OTP error', error);
+                alert("Invalid OTP: " + (error.message || "Please try again."));
+                this.disabled = false;
+                this.innerText = "Verify & Login";
+            });
+        } else {
+            alert("Verification service not ready.");
+            this.disabled = false;
+            this.innerText = "Verify & Login";
+        }
+    });
+
+    document.getElementById('retryOtpBtn').addEventListener('click', function() {
+        if (typeof window.retryOtp === 'function') {
+            window.retryOtp(null, (data) => {
+                alert("OTP Resent successfully!");
+            }, (error) => {
+                alert("Retry failed: " + (error.message || "Please wait a moment."));
+            });
+        }
+    });
+
+    async function verifyTokenOnBackend(accessToken) {
+        try {
+            const response = await fetch('/api/auth/verify-msg91-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessToken: accessToken })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // Store auth state for extra security layer if needed by dashboard
+                localStorage.setItem("isAuthenticated", "true");
+                localStorage.setItem("customerMobile", result.mobile);
+                
+                window.location.href = result.redirectTo;
+            } else {
+                // More helpful error message
+                let errorMsg = result.message || "Invalid or expired token.";
+                if (errorMsg.includes("408") || errorMsg.includes("IPBlocked")) {
+                    errorMsg += "\n\nTip: Please whitelist your server IP in MSG91 dashboard.";
+                }
+                alert("Secure verification failed: " + errorMsg);
+                document.getElementById('verifyOtpBtn').disabled = false;
+                document.getElementById('verifyOtpBtn').innerText = "Verify & Login";
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network error during verification.");
+            document.getElementById('verifyOtpBtn').disabled = false;
+            document.getElementById('verifyOtpBtn').innerText = "Verify & Login";
+        }
+    }
+</script>

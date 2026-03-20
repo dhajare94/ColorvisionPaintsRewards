@@ -1,0 +1,135 @@
+@model List<QRRewardPlatform.Models.Redemption>
+@{
+    Layout = "_RedeemLayout";
+    ViewData["Title"] = "My Dashboard";
+    var customer = ViewBag.Customer as QRRewardPlatform.Models.Customer;
+    if (customer == null)
+    {
+        Context.Response.Redirect("/CustomerDashboard/Login");
+    }
+}
+
+<style>
+    :root {
+        --primary: #3b82f6;
+        --secondary: #6366f1;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: #1e293b;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .badge-paid { background-color: #dcfce7; color: #15803d; }
+    .badge-pending { background-color: #fef9c3; color: #854d0e; }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23);
+    }
+</style>
+
+<main class="min-h-screen flex flex-col items-center py-10 px-6 sm:px-12">
+    <div class="w-full max-w-lg">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <img src="/images/logo.png" alt="Colorvision Paints" class="h-16 mx-auto mb-2" />
+            <div class="h-1 w-12 bg-primary mx-auto rounded-full mt-4"></div>
+        </div>
+
+        <!-- User Info -->
+        <div class="text-center mb-10 space-y-2">
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Hello, @(customer?.Name ?? "Customer")</h1>
+            <p class="text-slate-500 font-bold uppercase tracking-widest text-xs">@(customer?.Rank ?? "Member")</p>
+            <p class="text-slate-400 font-medium text-sm">@customer?.MobileNumber</p>
+        </div>
+
+        <!-- Scan QR CTA -->
+        <div class="mb-10 text-center">
+             <a href="/Redeem" class="btn-primary inline-flex items-center gap-3 px-12 py-5 rounded-2xl text-white font-black text-lg uppercase tracking-widest shadow-2xl">
+                <span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+                Scan QR Now
+            </a>
+            <p class="text-[10px] text-slate-400 font-bold mt-3 uppercase tracking-widest italic">Redeem more and earn rewards!</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-3 gap-3 mb-10">
+            <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm text-center">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending</p>
+                <p class="text-xl font-black text-amber-600">₹@((ViewBag.TotalPending as decimal?)?.ToString("N0") ?? "0")</p>
+            </div>
+            <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm text-center">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Redeemed</p>
+                <p class="text-xl font-black text-slate-800">@(ViewBag.TotalCount ?? 0)</p>
+            </div>
+            <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm text-center">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Payouts</p>
+                <p class="text-xl font-black text-green-600">₹@((ViewBag.TotalPaid as decimal?)?.ToString("N0") ?? "0")</p>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="space-y-4 mb-10">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-black text-slate-800 uppercase tracking-widest text-sm">Recent Activity</h3>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">History</span>
+            </div>
+
+            <div class="space-y-3">
+                @if (Model.Any())
+                {
+                    @foreach (var r in Model.Take(10))
+                    {
+                        var dateStr = DateTime.TryParse(r.RedemptionDate, out var dt) ? dt.ToString("dd MMM, hh:mm tt") : r.RedemptionDate;
+                        <div class="bg-white rounded-2xl p-4 flex items-center justify-between border border-slate-50 shadow-sm hover:translate-x-1 transition-transform cursor-default">
+                            <div class="flex items-center gap-4">
+                                <div class="h-10 w-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center">
+                                    <span class="material-symbols-outlined">payments</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-black text-slate-700">₹@r.RewardAmount.ToString("N0") Reward</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">@dateStr</p>
+                                </div>
+                            </div>
+                            <span class="badge badge-@r.PayoutStatus?.ToLower()">@r.PayoutStatus</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-12 bg-white rounded-3xl border-2 border-dashed border-slate-100">
+                        <span class="material-symbols-outlined text-slate-200 text-5xl mb-2">history_toggle_off</span>
+                        <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">No redemptions found</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center space-y-6 pt-10 border-t border-slate-100">
+            <a href="/CustomerDashboard/Logout" class="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-red-400 transition-colors">Logout Instance</a>
+            <p class="text-[9px] font-bold text-slate-200 uppercase tracking-[0.3em]">
+                Developed by Informa Pavilion
+            </p>
+        </div>
+    </div>
+</main>

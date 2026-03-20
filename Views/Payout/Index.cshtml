@@ -1,0 +1,86 @@
+@{
+    ViewData["Title"] = "Payout Batches";
+}
+@model List<QRRewardPlatform.Models.PayoutBatch>
+
+@{
+    int pendingCount = ViewBag.PendingCount;
+    decimal pendingAmount = ViewBag.PendingAmount;
+}
+
+<!-- Pending Summary -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900">Pending Redemptions</h3>
+            <p class="text-gray-500 text-sm mt-1">
+                <span class="font-semibold text-indigo-600">@pendingCount</span> redemptions totalling
+                <span class="font-semibold text-green-600">₹@pendingAmount.ToString("N2")</span> awaiting payout
+            </p>
+        </div>
+        @if (pendingCount > 0)
+        {
+            <form method="post" action="/Payout/CreateBatch">
+                <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Create Payout Batch
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<!-- Batches Table -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-900">All Payout Batches</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batch ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Users</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var batch in Model)
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 font-mono text-xs text-gray-700">@batch.Id</td>
+                        <td class="px-6 py-3 text-gray-700">@batch.UserCount</td>
+                        <td class="px-6 py-3 font-semibold text-gray-900">₹@batch.TotalAmount.ToString("N2")</td>
+                        <td class="px-6 py-3 text-gray-500 text-xs">@(batch.CreatedDate.Length > 10 ? batch.CreatedDate[..10] : batch.CreatedDate)</td>
+                        <td class="px-6 py-3">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full badge-@batch.Status.ToLower()">@batch.Status</span>
+                        </td>
+                        <td class="px-6 py-3 text-right space-x-2">
+                            <a href="/Payout/ExportCsv?id=@batch.Id" class="text-green-600 hover:text-green-800" title="Export CSV">
+                                <i class="fas fa-file-csv"></i>
+                            </a>
+                            <a href="/Payout/ExportExcel?id=@batch.Id" class="text-blue-600 hover:text-blue-800" title="Export Excel">
+                                <i class="fas fa-file-excel"></i>
+                            </a>
+                            @if (batch.Status == "Pending")
+                            {
+                                <form method="post" action="/Payout/MarkComplete" class="inline">
+                                    <input type="hidden" name="id" value="@batch.Id" />
+                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Mark Complete">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">No payout batches yet</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,258 @@
+@{
+    Layout = null;
+}
+@functions {
+    public bool HasPermission(string module)
+    {
+        var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+        if (role == "Admin") return true;
+
+        var permsClaim = User.Claims.FirstOrDefault(c => c.Type == "Permissions")?.Value;
+        if (string.IsNullOrEmpty(permsClaim)) return false;
+
+        var pList = permsClaim.Split(',').ToList();
+        return pList.Contains(module);
+    }
+}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Colorvision Paints</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .sidebar-link.active { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; }
+        .sidebar-link:hover:not(.active) { background: rgba(99,102,241,0.1); }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+        .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .toast { animation: slideIn 0.3s ease-out; }
+        @@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .badge-active { background: #dcfce7; color: #166534; }
+        .badge-inactive { background: #fef2f2; color: #991b1b; }
+        .badge-pending { background: #fef9c3; color: #854d0e; }
+        .badge-completed { background: #dcfce7; color: #166534; }
+        .badge-unused { background: #dbeafe; color: #1e40af; }
+        .badge-redeemed { background: #f3e8ff; color: #6b21a8; }
+        .badge-paid { background: #dcfce7; color: #166534; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+    </style>
+</head>
+<body class="h-full bg-gray-50">
+    <div class="flex h-full">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+            <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
+                <img src="/images/logo.png" alt="Logo" class="w-10 h-10 object-contain rounded-xl bg-white" />
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900">Colorvision Paints</h1>
+                    <p class="text-xs text-gray-500">Admin Panel</p>
+                </div>
+            </div>
+
+            <nav class="px-3 py-4 space-y-1 overflow-y-auto" style="height: calc(100% - 140px);">
+                @if (HasPermission("Dashboard")) {
+                <a href="/Dashboard" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="fas fa-chart-pie w-5 text-center"></i> Dashboard
+                </a>
+                }
+                @if (HasPermission("Customers")) {
+                <a href="/Customers" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")">
+                    <i class="fas fa-address-book w-5 text-center"></i> Customers
+                </a>
+                }
+                @if (HasPermission("Campaigns")) {
+                <a href="/Campaign" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Campaign" ? "active" : "")">
+                    <i class="fas fa-bullhorn w-5 text-center"></i> Campaigns
+                </a>
+                }
+
+
+                @if (HasPermission("Codes Manager")) {
+                <a href="/Codes" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Codes" ? "active" : "")">
+                    <i class="fas fa-barcode w-5 text-center"></i> Codes Manager
+                </a>
+                }
+
+                @if (HasPermission("Payouts")) {
+                <a href="/Payout" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Payout" ? "active" : "")">
+                    <i class="fas fa-wallet w-5 text-center"></i> Payouts
+                </a>
+                }
+                @if (User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value == "Admin" || HasPermission("Users"))
+                {
+                    <a href="/Users" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")">
+                        <i class="fas fa-users w-5 text-center"></i> Users
+                    </a>
+                }
+                @if (User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value == "Admin")
+                {
+                    <a href="/Settings" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "")">
+                        <i class="fas fa-cog w-5 text-center"></i> Settings
+                    </a>
+                }
+            </nav>
+
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
+                <form method="post" action="/Account/Logout">
+                    <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition">
+                        <i class="fas fa-sign-out-alt w-5 text-center"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <div class="flex-1 lg:ml-64">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg hover:bg-gray-100">
+                            <i class="fas fa-bars text-gray-600"></i>
+                        </button>
+                        <h2 class="text-xl font-bold text-gray-900">@ViewData["Title"]</h2>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        @await Component.InvokeAsync("Notification")
+                        <div class="relative group cursor-pointer inline-block text-left" id="profileMenuContainer">
+                            <div class="flex items-center gap-2" onclick="document.getElementById('profileDropdown').classList.toggle('hidden')">
+                                @{
+                                    var profileImage = User.Claims.FirstOrDefault(c => c.Type == "ProfileImage")?.Value;
+                                    var displayName = User.Claims.FirstOrDefault(c => c.Type == "DisplayName")?.Value ?? User.Identity?.Name;
+                                }
+                                @if (!string.IsNullOrEmpty(profileImage))
+                                {
+                                    <img src="@profileImage" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
+                                }
+                                else
+                                {
+                                    <div class="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
+                                        <i class="fas fa-user text-white text-xs"></i>
+                                    </div>
+                                }
+                                <span class="text-sm font-medium text-gray-700 hidden sm:inline">@displayName</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                            </div>
+                            
+                            <!-- Dropdown -->
+                            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+                                <button onclick="openModal('changePasswordModal'); document.getElementById('profileDropdown').classList.add('hidden')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                    <i class="fas fa-key w-4 text-center"></i> Change Password
+                                </button>
+                                <form method="post" action="/Account/Logout" class="block m-0">
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                        <i class="fas fa-sign-out-alt w-4 text-center"></i> Sign out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="p-4 lg:p-8">
+                @if (TempData["Message"] != null)
+                {
+                    <div class="toast mb-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                        <span class="text-green-800 text-sm font-medium">@TempData["Message"]</span>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="toast mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+                        <i class="fas fa-exclamation-circle text-red-600"></i>
+                        <span class="text-red-800 text-sm font-medium">@TempData["Error"]</span>
+                    </div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Sidebar overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900">Change Password</h3>
+                <button onclick="closeModal('changePasswordModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="/Users/ChangePassword" method="post">
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                        <input type="password" name="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        <input type="password" name="newPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                        <input type="password" name="confirmPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" />
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('changePasswordModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Close modals on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay').forEach(m => {
+                    m.classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            var isClickInside = document.getElementById('profileMenuContainer')?.contains(event.target);
+            var dropdown = document.getElementById('profileDropdown');
+            if (!isClickInside && dropdown && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

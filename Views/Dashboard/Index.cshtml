@@ -1,0 +1,261 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+@model QRRewardPlatform.Models.DashboardViewModel
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+    <div class="stat-card glass-card rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                <i class="fas fa-users text-orange-600"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-400">Total Users</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.TotalCustomers</p>
+        <p class="text-xs text-gray-500 mt-1">Total registered users</p>
+    </div>
+    <div class="stat-card glass-card rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <i class="fas fa-bullhorn text-indigo-600"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-400">Campaigns</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.TotalCampaigns</p>
+        <p class="text-xs text-gray-500 mt-1">Total campaigns</p>
+    </div>
+    <div class="stat-card glass-card rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                <i class="fas fa-qrcode text-purple-600"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-400">QR Codes</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.TotalCodes</p>
+        <p class="text-xs text-gray-500 mt-1">Total generated</p>
+    </div>
+    <div class="stat-card glass-card rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                <i class="fas fa-gift text-green-600"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-400">Redemptions</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">@Model.TotalRedemptions</p>
+        <p class="text-xs text-gray-500 mt-1">Total redeemed</p>
+    </div>
+    <div class="stat-card glass-card rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center">
+                <i class="fas fa-clock text-yellow-600"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-400">Pending</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">₹@Model.PendingPayouts.ToString("N0")</p>
+        <p class="text-xs text-gray-500 mt-1">Pending payouts</p>
+    </div>
+    <div class="stat-card glass-card rounded-2xl p-5 border border-gray-100 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                <i class="fas fa-check-circle text-green-600"></i>
+            </div>
+            <span class="text-xs font-medium text-gray-400">Completed</span>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">₹@Model.CompletedPayouts.ToString("N0")</p>
+        <p class="text-xs text-gray-500 mt-1">Completed payouts</p>
+    </div>
+</div>
+
+<!-- Customer Insights Row 1 -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Top Customers -->
+    <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">🏆 Top Customers by Bags Redeemed</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase rounded-l-lg">Name</th>
+                        <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Rank</th>
+                        <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Bags</th>
+                        <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase rounded-r-lg">Rewards</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var cust in Model.TopCustomers)
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">@cust.Name</td>
+                            <td class="px-4 py-3"><span class="badge bg-info">@cust.Rank</span></td>
+                            <td class="px-4 py-3">@cust.TotalBagsRedeemed</td>
+                            <td class="px-4 py-3 text-green-600 font-medium">₹@cust.TotalRewards.ToString("N0")</td>
+                        </tr>
+                    }
+                    @if (!Model.TopCustomers.Any())
+                    {
+                        <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">No customers yet</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Category Stats & Top Cities -->
+    <div class="glass-card rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">📍 Demographics</h3>
+        
+        <div class="mb-6">
+            <h4 class="text-sm font-medium text-gray-500 mb-3 uppercase">Top Roles</h4>
+            <div class="space-y-3">
+                @foreach (var kvp in Model.CategoryStats.OrderByDescending(x => x.Value).Take(4))
+                {
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-gray-700">@kvp.Key</span>
+                        <span class="font-medium bg-gray-100 text-gray-800 px-2 py-1 rounded-md">@kvp.Value</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div>
+            <h4 class="text-sm font-medium text-gray-500 mb-3 uppercase">Most Active Cities</h4>
+            <div class="flex flex-wrap gap-2">
+                @foreach (var kvp in Model.TopCities)
+                {
+                    <span class="inline-block bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full">
+                        @kvp.Key (@kvp.Value)
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart -->
+<div class="glass-card rounded-2xl p-6 border border-gray-100 shadow-sm mb-8">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Daily Redemptions (Last 30 Days)</h3>
+    <div style="height: 300px;">
+        <canvas id="redemptionChart"></canvas>
+    </div>
+</div>
+
+<!-- Recent Data Tables -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Campaigns -->
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Campaigns</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var campaign in Model.RecentCampaigns)
+                    {
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-3 font-medium text-gray-900">@campaign.Name</td>
+                            <td class="px-6 py-3">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full badge-@campaign.Status.ToLower()">@campaign.Status</span>
+                            </td>
+                            <td class="px-6 py-3 text-gray-500">@(campaign.CreatedAt.Length > 10 ? campaign.CreatedAt[..10] : campaign.CreatedAt)</td>
+                        </tr>
+                    }
+                    @if (!Model.RecentCampaigns.Any())
+                    {
+                        <tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No campaigns yet</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Redemptions -->
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Redemptions</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reward</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach (var g in Model.RecentRedemptions.GroupBy(r => new { r.UserName, r.MobileNumber }))
+                    {
+                        var gid = Guid.NewGuid().ToString("N");
+                        var totalAmount = g.Sum(x => x.RewardAmount);
+                        <tr class="hover:bg-gray-50 group cursor-pointer transition" onclick="document.getElementById('details_@gid').classList.toggle('hidden')">
+                            <td class="px-6 py-3 font-medium text-gray-900">
+                                @g.Key.UserName
+                                <span class="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full ml-1 border border-gray-200">@g.Count() codes</span>
+                            </td>
+                            <td class="px-6 py-3 text-gray-700 font-semibold text-green-700">₹@totalAmount.ToString("N2")</td>
+                            <td class="px-6 py-3 text-right">
+                                <i class="fas fa-chevron-down text-gray-400 text-xs group-hover:text-indigo-500 transition"></i>
+                            </td>
+                        </tr>
+                        <tr id="details_@gid" class="hidden bg-gray-50/50">
+                            <td colspan="3" class="px-6 py-3 border-t border-gray-100">
+                                <ul class="text-xs text-gray-600 space-y-2">
+                                    @foreach(var item in g)
+                                    {
+                                        <li class="flex justify-between border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                                            <span class="text-gray-500">@(item.RedemptionDate.Length > 10 ? item.RedemptionDate[..10] : item.RedemptionDate)</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium">₹@item.RewardAmount.ToString("N2")</span>
+                                                <span class="px-2 py-0.5 rounded-md badge-@item.PayoutStatus.ToLower()">@item.PayoutStatus</span>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.RecentRedemptions.Any())
+                    {
+                        <tr><td colspan="3" class="px-6 py-8 text-center text-gray-400">No redemptions yet</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const ctx = document.getElementById('redemptionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [@Html.Raw(string.Join(",", Model.DailyRedemptions.Keys.Select(k => $"'{k[5..]}'")))],
+            datasets: [{
+                label: 'Redemptions',
+                data: [@Html.Raw(string.Join(",", Model.DailyRedemptions.Values))],
+                backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+}

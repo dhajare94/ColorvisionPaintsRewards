@@ -1,0 +1,38 @@
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(19,43): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(31,40): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(32,42): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(19,43): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(27,41): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(28,38): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Settings\Index.cshtml(31,47): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Settings\Index.cshtml(32,46): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Settings\Index.cshtml(33,47): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\SettingsService.cs(30,57): error CS1503: Argument 1: cannot convert from 'QRRewardPlatform.Models.AppSettings' to 'string' [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(17,36): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\QRCode\Index.cshtml(20,44): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(17,36): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Campaign\Index.cshtml(112,40): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Campaign\Index.cshtml(168,40): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+
+Build FAILED.
+
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(17,36): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\QRCode\Index.cshtml(20,44): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(17,36): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Campaign\Index.cshtml(112,40): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Campaign\Index.cshtml(168,40): warning CS8602: Dereference of a possibly null reference. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(19,43): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(31,40): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Codes\Index.cshtml(32,42): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(19,43): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(27,41): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Redemption\Index.cshtml(28,38): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Settings\Index.cshtml(31,47): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Settings\Index.cshtml(32,46): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Views\Settings\Index.cshtml(33,47): error RZ1031: The tag helper 'option' must not have C# in the element's attribute declaration area. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\SettingsService.cs(30,57): error CS1503: Argument 1: cannot convert from 'QRRewardPlatform.Models.AppSettings' to 'string' [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+    5 Warning(s)
+    10 Error(s)
+
+Time Elapsed 00:00:01.60
+

@@ -1,0 +1,25 @@
+# .NET core
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Tt]mp/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Firebase
+firebase-auth.json
+firebase-debug.log
+.firebase/
+
+# Environments
+appsettings.Development.json
+appsettings.Local.json
+
+# User-specific
+.gemini/
+.idea/
+.DS_Store
+Thumbs.db
