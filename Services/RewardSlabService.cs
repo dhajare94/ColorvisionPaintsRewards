@@ -40,18 +40,5 @@ namespace QRRewardPlatform.Services
         {
             await _firebase.DeleteAsync(Node, id);
         }
-
-        public decimal CalculateReward(RewardSlab slab)
-        {
-            var random = new Random();
-            double min = (double)slab.MinAmount;
-            double max = (double)slab.MaxAmount;
-            
-            if (min > max) 
-                return (decimal)max;
-                
-            double reward = random.NextDouble() * (max - min) + min;
-            return (decimal)Math.Round(reward, 2);
-        }
     }
 }

@@ -116,7 +116,7 @@
                     <!option value="">Select a slab...</!option>
                     @foreach (var s in (ViewBag.Slabs as List<QRRewardPlatform.Models.RewardSlab>) ?? new List<QRRewardPlatform.Models.RewardSlab>())
                     {
-                        <!option value="@s.Id">@s.Name (@s.Type)</!option>
+                        <!option value="@s.Id">@s.Name</!option>
                     }
                 </!select>
             </div>
@@ -172,7 +172,7 @@
                     <!option value="">Select a slab...</!option>
                     @foreach (var s in (ViewBag.Slabs as List<QRRewardPlatform.Models.RewardSlab>) ?? new List<QRRewardPlatform.Models.RewardSlab>())
                     {
-                        <!option value="@s.Id">@s.Name (@s.Type)</!option>
+                        <!option value="@s.Id">@s.Name</!option>
                     }
                 </!select>
             </div>

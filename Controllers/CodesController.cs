@@ -9,11 +9,15 @@ namespace QRRewardPlatform.Controllers
     {
         private readonly CodeService _codeService;
         private readonly CampaignService _campaignService;
+        private readonly RewardSlabService _slabService;
+        private readonly SettingsService _settingsService;
 
-        public CodesController(CodeService codeService, CampaignService campaignService)
+        public CodesController(CodeService codeService, CampaignService campaignService, RewardSlabService slabService, SettingsService settingsService)
         {
             _codeService = codeService;
             _campaignService = campaignService;
+            _slabService = slabService;
+            _settingsService = settingsService;
         }
 
         public async Task<IActionResult> Index(string? campaignId, string? batchName, string? status)
@@ -21,11 +25,15 @@ namespace QRRewardPlatform.Controllers
             var codes = await _codeService.GetFilteredAsync(campaignId, null, status);
             var allCodes = await _codeService.GetAllAsync();
             var campaigns = await _campaignService.GetAllAsync();
+            var budgets = await _slabService.GetAllAsync();
+            var settings = await _settingsService.GetSettingsAsync();
             
             if (!string.IsNullOrEmpty(batchName))
                 codes = codes.Where(c => c.BatchName == batchName || c.BatchId == batchName).ToList();
 
             ViewBag.Campaigns = campaigns;
+            ViewBag.Budgets = budgets;
+            ViewBag.BaseUrl = settings?.BaseRedeemUrl;
             ViewBag.SelectedCampaign = campaignId;
             ViewBag.SelectedBatchName = batchName;
             ViewBag.SelectedStatus = status;

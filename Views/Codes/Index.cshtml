@@ -103,7 +103,7 @@
 
 <!-- Generate QR Modal -->
 <div id="generateQrModal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl w-full max-w-2xl overflow-hidden transform transition-all shadow-2xl">
+    <div class="bg-white rounded-xl w-full max-w-3xl overflow-hidden transform transition-all shadow-2xl">
         <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <h3 class="text-lg font-bold text-gray-900"><i class="fas fa-qrcode text-indigo-600 mr-2"></i>Generate QR Codes</h3>
             <button onclick="closeModal('generateQrModal')" class="text-gray-400 hover:text-gray-600 transition">
@@ -111,34 +111,97 @@
             </button>
         </div>
         <form method="post" action="/QRCode/Generate">
-            <div class="p-6 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Campaign</label>
-                        <select name="campaignId" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                            <option value="">Select campaign...</option>
-                            @if (campaigns != null)
-                            {
-                                @foreach (var c in campaigns)
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-5 gap-6">
+                
+                <div class="lg:col-span-3 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Campaign</label>
+                            <select name="campaignId" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">Select campaign...</option>
+                                @if (campaigns != null)
                                 {
-                                    <option value="@c.Id">@c.Name</option>
+                                    @foreach (var c in campaigns)
+                                    {
+                                        <option value="@c.Id">@c.Name</option>
+                                    }
                                 }
-                            }
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Batch Name (Required)</label>
-                        <input type="text" name="batchName" required placeholder="e.g. Diwali Promo 2026" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                        <input type="number" name="count" min="1" max="500" value="10" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Batch Name (Required)</label>
+                            <input type="text" name="batchName" required placeholder="e.g. Diwali Promo 2026" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                        </div>
+                        
+                        <!-- NEW BUDGET FIELD -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Reward Budget</label>
+                            <select name="budgetId" id="budgetSelect" required onchange="updateBudgetInsights()" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">Select a budget...</option>
+                                @{ var budgets = ViewBag.Budgets as List<QRRewardPlatform.Models.RewardSlab>; }
+                                @if (budgets != null)
+                                {
+                                    @foreach (var b in budgets)
+                                    {
+                                        <option value="@b.Id" data-remaining="@(b.TotalBudget - b.AllocatedAmount)" data-total="@b.TotalBudget">
+                                            @b.Name (Available: ₹@((b.TotalBudget - b.AllocatedAmount).ToString("N2")))
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity (Coupons)</label>
+                            <input type="number" id="couponCount" name="count" min="1" max="10000" value="10" required oninput="updateBudgetInsights()" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Distribution Type</label>
+                            <select name="distribution" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="equal">Equal Distribution</option>
+                                <option value="random">Controlled Random</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
+
+                <!-- PREVIEW PANEL -->
+                <div class="lg:col-span-2 bg-indigo-50 rounded-xl p-5 border border-indigo-100 flex flex-col h-full">
+                    <h4 class="text-sm font-bold text-indigo-900 mb-3 flex items-center"><i class="fas fa-chart-pie mr-2 text-indigo-600"></i> Budget Insights</h4>
+                    
+                    <div id="insightPlaceholder" class="text-xs text-indigo-400 italic text-center my-auto">
+                        <i class="fas fa-hand-pointer text-2xl mb-2 opacity-50 block"></i>
+                        Select a budget to see distribution insights
+                    </div>
+                    
+                    <div id="insightData" class="hidden space-y-4">
+                        <div class="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm">
+                            <p class="text-xs text-gray-500 mb-0.5">Available Budget</p>
+                            <p class="font-bold text-gray-900 text-lg" id="lblRemaining">₹0.00</p>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm">
+                            <p class="text-xs text-gray-500 mb-0.5">Coupons Requested</p>
+                            <p class="font-bold text-gray-900 text-lg" id="lblCount">0</p>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm">
+                            <p class="text-xs text-gray-500 mb-0.5">Average Reward / Coupon</p>
+                            <p class="font-bold text-indigo-700 text-lg" id="lblAverage">₹0.00</p>
+                        </div>
+                        
+                        <div id="warningAlert" class="hidden mt-2 p-3 bg-red-100 text-red-700 rounded-lg text-xs font-medium border border-red-200 flex items-start gap-2">
+                            <i class="fas fa-exclamation-triangle mt-0.5"></i>
+                            <span id="warningMsg">Warning message here</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                <button type="button" onclick="closeModal('generateQrModal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
-                <button type="submit" class="px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+            
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-xl">
+                <button type="button" onclick="closeModal('generateQrModal')" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">Cancel</button>
+                <button type="submit" id="btnGenerate" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 shadow-sm">
                     <i class="fas fa-magic"></i> Generate Codes
                 </button>
             </div>
@@ -212,9 +275,14 @@
                                 <td class="px-6 py-3">
                                     <span class="px-2 py-1 text-xs font-medium rounded-full badge-@code.Status.ToLower()">@code.Status</span>
                                 </td>
+                                @{
+                                    string baseUrl = ViewBag.BaseUrl ?? "";
+                                    string redeemLink = string.IsNullOrEmpty(baseUrl) ? Url.Action("Index", "Redeem", new { code = code.Code }) : $"{baseUrl}?code={code.Code}";
+                                    string qrLink = string.IsNullOrEmpty(code.QRUrl) ? Url.Action("DownloadQR", "QRCode", new { code = code.Code }) : code.QRUrl;
+                                }
                                 <td class="px-6 py-3 text-xs space-y-1">
-                                    <a href="@code.QRUrl" target="_blank" class="block text-indigo-600 hover:text-indigo-800 transition"><i class="fas fa-qrcode mr-1"></i> QR Image</a>
-                                    <a href="/Redeem?code=@code.Code" target="_blank" class="block text-green-600 hover:text-green-800 transition"><i class="fas fa-external-link-alt mr-1"></i> Redeem Link</a>
+                                    <a href="@qrLink" target="_blank" class="block text-indigo-600 hover:text-indigo-800 transition"><i class="fas fa-qrcode mr-1"></i> QR Image</a>
+                                    <a href="@redeemLink" target="_blank" class="block text-green-600 hover:text-green-800 transition"><i class="fas fa-external-link-alt mr-1"></i> Redeem Link</a>
                                 </td>
                                 <td class="px-6 py-3 text-gray-500 text-xs">@(code.CreatedDate.Length > 10 ? code.CreatedDate[..10] : code.CreatedDate)</td>
                                 <td class="px-6 py-3 text-right">
@@ -271,6 +339,61 @@
             });
         } else {
             bulkDiv.classList.add('hidden');
+        }
+    }
+
+    function updateBudgetInsights() {
+        const select = document.getElementById('budgetSelect');
+        const countInput = document.getElementById('couponCount');
+        const insightPlaceholder = document.getElementById('insightPlaceholder');
+        const insightData = document.getElementById('insightData');
+        const lblRemaining = document.getElementById('lblRemaining');
+        const lblCount = document.getElementById('lblCount');
+        const lblAverage = document.getElementById('lblAverage');
+        const warningAlert = document.getElementById('warningAlert');
+        const warningMsg = document.getElementById('warningMsg');
+        const btnGenerate = document.getElementById('btnGenerate');
+
+        if (!select.value) {
+            insightPlaceholder.classList.remove('hidden');
+            insightData.classList.add('hidden');
+            return;
+        }
+
+        const option = select.options[select.selectedIndex];
+        const remaining = parseFloat(option.getAttribute('data-remaining'));
+        const count = parseInt(countInput.value) || 0;
+
+        insightPlaceholder.classList.add('hidden');
+        insightData.classList.remove('hidden');
+
+        lblRemaining.innerText = '₹' + remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2});
+        lblCount.innerText = count;
+
+        if (count > 0) {
+            const avg = remaining / count;
+            lblAverage.innerText = '₹' + avg.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2});
+            
+            if (remaining <= 0) {
+                warningAlert.classList.remove('hidden');
+                warningMsg.innerText = "This budget is completely exhausted. You cannot generate new coupons.";
+                btnGenerate.disabled = true;
+                btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (avg < 1) {
+                warningAlert.classList.remove('hidden');
+                warningMsg.innerText = "Warning: The average reward payout per coupon is extremely low (< ₹1). Consider reducing the quantity or using a larger budget.";
+                btnGenerate.disabled = false;
+                btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                warningAlert.classList.add('hidden');
+                btnGenerate.disabled = false;
+                btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        } else {
+            lblAverage.innerText = '₹0.00';
+            warningAlert.classList.add('hidden');
+            btnGenerate.disabled = true;
+            btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
         }
     }
 </script>

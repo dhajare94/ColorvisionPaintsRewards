@@ -45,7 +45,7 @@ namespace QRRewardPlatform.Services
             return entry.Value;
         }
 
-        public async Task<List<string>> GenerateCodesAsync(string campaignId, int count, string baseRedeemUrl, string batchId, string batchName)
+        public async Task<List<string>> GenerateCodesAsync(string campaignId, int count, string baseRedeemUrl, string batchId, string batchName, string budgetId, List<decimal> amounts)
         {
             var generatedIds = new List<string>();
 
@@ -61,6 +61,8 @@ namespace QRRewardPlatform.Services
                     CampaignId = campaignId,
                     BatchId = batchId,
                     BatchName = batchName,
+                    BudgetId = budgetId,
+                    RewardAmount = amounts[i],
                     Status = "Unused",
                     CreatedDate = DateTime.UtcNow.ToString("o"),
                     QRUrl = qrUrl 

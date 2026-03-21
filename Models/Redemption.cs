@@ -5,6 +5,7 @@ namespace QRRewardPlatform.Models
         public string Id { get; set; } = string.Empty;
         public string CodeId { get; set; } = string.Empty;
         public string CampaignId { get; set; } = string.Empty;
+        public string BudgetId { get; set; } = string.Empty;
 
         public string UserName { get; set; } = string.Empty;
         public string MobileNumber { get; set; } = string.Empty;

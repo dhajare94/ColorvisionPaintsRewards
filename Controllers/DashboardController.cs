@@ -14,9 +14,10 @@ namespace QRRewardPlatform.Controllers
         private readonly PayoutService _payoutService;
         private readonly CustomerService _customerService;
         private readonly FirebaseService _firebaseService;
+        private readonly RewardSlabService _slabService;
         
         public DashboardController(CampaignService campaignService, CodeService codeService,
-            RedemptionService redemptionService, PayoutService payoutService, CustomerService customerService, FirebaseService firebaseService)
+            RedemptionService redemptionService, PayoutService payoutService, CustomerService customerService, FirebaseService firebaseService, RewardSlabService slabService)
         {
             _campaignService = campaignService;
             _codeService = codeService;
@@ -24,6 +25,7 @@ namespace QRRewardPlatform.Controllers
             _payoutService = payoutService;
             _customerService = customerService;
             _firebaseService = firebaseService;
+            _slabService = slabService;
         }
 
         public async Task<IActionResult> Index()
@@ -33,6 +35,9 @@ namespace QRRewardPlatform.Controllers
             var redemptions = await _redemptionService.GetAllAsync();
             var payouts = await _payoutService.GetAllAsync();
             var customers = await _customerService.GetAllAsync();
+            var budgets = await _slabService.GetAllAsync();
+            
+            ViewBag.Budgets = budgets;
 
             var model = new DashboardViewModel
             {

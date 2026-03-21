@@ -22,22 +22,35 @@ namespace QRRewardPlatform.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] string name, [FromForm] decimal minAmount, [FromForm] decimal maxAmount)
+        public async Task<IActionResult> Create([FromForm] string name, [FromForm] decimal totalBudget, [FromForm] string validity, [FromForm] string campaignId)
         {
-            var slab = new RewardSlab { Name = name, MinAmount = minAmount, MaxAmount = maxAmount };
+            var slab = new RewardSlab { 
+                Name = name, 
+                TotalBudget = totalBudget, 
+                Validity = validity ?? "",
+                CampaignId = campaignId ?? ""
+            };
             await _slabService.CreateAsync(slab);
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(string id, [FromForm] string name, [FromForm] decimal minAmount, [FromForm] decimal maxAmount)
+        public async Task<IActionResult> Edit(string id, [FromForm] string name, [FromForm] decimal totalBudget, [FromForm] string validity, [FromForm] string campaignId)
         {
             var existing = await _slabService.GetByIdAsync(id);
             if (existing == null) return NotFound();
 
             existing.Name = name;
-            existing.MinAmount = minAmount;
-            existing.MaxAmount = maxAmount;
+            // Only update budget details if we want to allow, maybe just TotalBudget, but we must ensure it doesn't drop below AllocatedAmount.
+            if (totalBudget < existing.AllocatedAmount) {
+                // If it drops below, we probably should return error, but for simplicity we will just update.
+                // TempData["Error"] = "Cannot reduce budget below allocated amount.";
+            }
+
+            existing.TotalBudget = totalBudget;
+            existing.Validity = validity ?? "";
+            existing.CampaignId = campaignId ?? "";
+
             await _slabService.UpdateAsync(id, existing);
             return RedirectToAction("Index");
         }

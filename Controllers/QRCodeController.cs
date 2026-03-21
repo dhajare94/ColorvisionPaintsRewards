@@ -10,14 +10,18 @@ namespace QRRewardPlatform.Controllers
     {
         private readonly CodeService _codeService;
         private readonly CampaignService _campaignService;
+        private readonly RewardSlabService _slabService;
         private readonly SettingsService _settingsService;
         private readonly QRCodeGeneratorService _qrService;
         private readonly ImgBBService _imgbbService;
+
         public QRCodeController(CodeService codeService, CampaignService campaignService,
+            RewardSlabService slabService,
             SettingsService settingsService, QRCodeGeneratorService qrService, ImgBBService imgbbService)
         {
             _codeService = codeService;
             _campaignService = campaignService;
+            _slabService = slabService;
             _settingsService = settingsService;
             _qrService = qrService;
             _imgbbService = imgbbService;
@@ -31,15 +35,73 @@ namespace QRRewardPlatform.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Generate(string campaignId, int count, string batchName)
+        public async Task<IActionResult> Generate(string campaignId, int count, string batchName, string budgetId, string distribution)
         {
+            var budget = await _slabService.GetByIdAsync(budgetId);
+            if (budget == null) {
+                TempData["Error"] = "Budget not found.";
+                return RedirectToAction("Index", "Codes");
+            }
+            decimal availableBudget = budget.TotalBudget - budget.AllocatedAmount;
+            if (availableBudget <= 0) {
+                TempData["Error"] = "This budget is fully exhausted. No remaining balance to distribute.";
+                return RedirectToAction("Index", "Codes");
+            }
+
             var settings = await _settingsService.GetSettingsAsync();
             var baseUrl = settings.BaseRedeemUrl;
             if (string.IsNullOrEmpty(baseUrl))
                 baseUrl = $"{Request.Scheme}://{Request.Host}/Redeem";
 
             var batchId = $"BATCH-{DateTime.UtcNow:yyyyMMddHHmmss}";
-            var generatedIds = await _codeService.GenerateCodesAsync(campaignId, count, baseUrl, batchId, batchName);
+
+            // Distribute budget
+            var amounts = new List<decimal>();
+            if (distribution == "equal") {
+                decimal amountPerCode = Math.Floor((availableBudget / count) * 100) / 100;
+                if (amountPerCode <= 0) amountPerCode = 0.01m; // ensure min logic
+                
+                decimal remainder = availableBudget - (amountPerCode * count);
+                for (int i=0; i<count; i++) amounts.Add(amountPerCode);
+                
+                if (remainder >= 0 && remainder < availableBudget) {
+                    amounts[0] += remainder; // dump remainder onto first code to ensure total payout exactly matches exhausted amount
+                }
+            } else {
+                // random distribution, ensuring total exactly matches
+                Random rnd = new Random();
+                var randoms = new List<double>();
+                for (int i=0; i<count; i++) randoms.Add(rnd.NextDouble() + 0.1); // add 0.1 to avoid pure zero
+                
+                double sum = randoms.Sum();
+                decimal runningTotal = 0;
+                for (int i=0; i<count-1; i++) {
+                    decimal amount = Math.Floor(((decimal)(randoms[i] / sum) * availableBudget) * 100) / 100;
+                    amounts.Add(amount);
+                    runningTotal += amount;
+                }
+                amounts.Add(availableBudget - runningTotal); // last code gets exactly the rest
+            }
+
+            // Shuffle if random
+            if (distribution == "random") {
+                Random rng = new Random();
+                int n = amounts.Count;  
+                while (n > 1) {  
+                    n--;  
+                    int k = rng.Next(n + 1);  
+                    decimal value = amounts[k];  
+                    amounts[k] = amounts[n];  
+                    amounts[n] = value;  
+                } 
+            }
+
+            var generatedIds = await _codeService.GenerateCodesAsync(campaignId, count, baseUrl, batchId, batchName, budgetId, amounts);
+
+            // Update budget tracker
+            budget.AllocatedAmount += amounts.Sum();
+            budget.GeneratedCoupons += count;
+            await _slabService.UpdateAsync(budget.Id, budget);
 
             int imgbbSuccessCount = 0;
             foreach (var id in generatedIds)

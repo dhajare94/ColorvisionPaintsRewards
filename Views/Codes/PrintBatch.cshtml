@@ -123,8 +123,11 @@
                     @foreach (var code in pageItems)
                     {
                         <div class="qr-card">
-                            <img src="/images/logo.png" alt="Logo" class="qr-card-logo" />
-                            <img src="@code.QRUrl" class="qr-image" />
+                            <img src="/images/logo.png" alt="Logo" class="qr-card-logo" onerror="this.style.display='none'" />
+                            @{
+                                string qrLink = string.IsNullOrEmpty(code.QRUrl) ? Url.Action("DownloadQR", "QRCode", new { code = code.Code }) : code.QRUrl;
+                            }
+                            <img src="@qrLink" class="qr-image" />
                             <div class="qr-code-text">@code.Code</div>
                         </div>
                     }

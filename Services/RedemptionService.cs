@@ -59,9 +59,8 @@ namespace QRRewardPlatform.Services
             var campaign = await _campaignService.GetByIdAsync(codeEntry.CampaignId);
             if (campaign == null || campaign.Status != "Active") return (false, "Campaign not found or inactive.", 0);
 
-            var slab = await _slabService.GetByIdAsync(campaign.RewardSlabId);
-            if (slab == null) return (false, "Reward configuration not found.", 0);
-
+            var budget = await _slabService.GetByIdAsync(codeEntry.BudgetId ?? campaign.RewardSlabId);
+            
             Customer customer = await _customerService.GetOrCreateAsync(mobileNumber, userName, city, district, category);
 
             if (!string.IsNullOrEmpty(upiNumber) && customer.UpiNumber != upiNumber)
@@ -72,12 +71,13 @@ namespace QRRewardPlatform.Services
             
             string finalUpiNumber = !string.IsNullOrEmpty(upiNumber) ? upiNumber : (customer.UpiNumber ?? "");
 
-            decimal rewardAmount = _slabService.CalculateReward(slab);
+            decimal rewardAmount = codeEntry.RewardAmount;
 
             var redemption = new Redemption
             {
                 CodeId = codeEntry.Id,
                 CampaignId = codeEntry.CampaignId,
+                BudgetId = codeEntry.BudgetId,
                 UserName = customer.Name,
                 MobileNumber = customer.MobileNumber,
                 City = customer.City,
@@ -92,6 +92,11 @@ namespace QRRewardPlatform.Services
             var redemptionId = await _firebase.PushAsync(Node, redemption);
             await _codeService.MarkRedeemedAsync(codeEntry.Id, redemptionId);
             
+            if (budget != null) {
+                budget.RedeemedAmount += rewardAmount;
+                await _slabService.UpdateAsync(budget.Id, budget);
+            }
+
             await _customerService.UpdateMetricsAsync(customer.Id, 1, rewardAmount);
 
 
@@ -186,17 +191,17 @@ namespace QRRewardPlatform.Services
                     var campaign = await _campaignService.GetByIdAsync(codeEntry.CampaignId);
                     if (campaign != null && campaign.Status == "Active")
                     {
-                        var slab = await _slabService.GetByIdAsync(campaign.RewardSlabId);
-                        if (slab != null)
-                        {
-                            decimal rewardAmount = _slabService.CalculateReward(slab);
-                            totalReward += rewardAmount;
-                            validCodes++;
+                        var budget = await _slabService.GetByIdAsync(codeEntry.BudgetId ?? campaign.RewardSlabId);
+                        
+                        decimal rewardAmount = codeEntry.RewardAmount;
+                        totalReward += rewardAmount;
+                        validCodes++;
 
                             var redemption = new Redemption
                             {
                                 CodeId = codeEntry.Id,
                                 CampaignId = codeEntry.CampaignId,
+                                BudgetId = codeEntry.BudgetId,
                                 UserName = customer.Name,
                                 MobileNumber = customer.MobileNumber,
                                 City = customer.City,
@@ -214,10 +219,14 @@ namespace QRRewardPlatform.Services
                             await _codeService.MarkRedeemedAsync(codeEntry.Id, redId);
 
 
+                            if (budget != null) {
+                                budget.RedeemedAmount += rewardAmount;
+                                await _slabService.UpdateAsync(budget.Id, budget);
+                            }
                         }
                     }
                 }
-            }
+
 
             if (validCodes == 0)
             {

@@ -212,6 +212,7 @@
                                     {
                                         <li class="flex justify-between border-b border-gray-100 pb-2 last:border-0 last:pb-0">
                                             <span class="text-gray-500">@(item.RedemptionDate.Length > 10 ? item.RedemptionDate[..10] : item.RedemptionDate)</span>
+                                            <span class="text-xs text-indigo-500 font-medium bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">@((ViewBag.Budgets as List<QRRewardPlatform.Models.RewardSlab>)?.FirstOrDefault(b => b.Id == item.BudgetId)?.Name ?? "Legacy")</span>
                                             <div class="flex items-center gap-2">
                                                 <span class="font-medium">₹@item.RewardAmount.ToString("N2")</span>
                                                 <span class="px-2 py-0.5 rounded-md badge-@item.PayoutStatus.ToLower()">@item.PayoutStatus</span>

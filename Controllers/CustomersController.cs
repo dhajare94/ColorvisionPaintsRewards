@@ -11,12 +11,14 @@ namespace QRRewardPlatform.Controllers
         private readonly CustomerService _customerService;
         private readonly RedemptionService _redemptionService;
         private readonly CampaignService _campaignService;
+        private readonly RewardSlabService _slabService;
 
-        public CustomersController(CustomerService customerService, RedemptionService redemptionService, CampaignService campaignService)
+        public CustomersController(CustomerService customerService, RedemptionService redemptionService, CampaignService campaignService, RewardSlabService slabService)
         {
             _customerService = customerService;
             _redemptionService = redemptionService;
             _campaignService = campaignService;
+            _slabService = slabService;
         }
 
         public async Task<IActionResult> Index()
@@ -46,6 +48,8 @@ namespace QRRewardPlatform.Controllers
 
             var campaigns = await _campaignService.GetAllAsync();
             ViewBag.Campaigns = campaigns;
+
+            ViewBag.Budgets = await _slabService.GetAllAsync();
 
             return View(customer);
         }
