@@ -133,18 +133,17 @@
                             <input type="text" name="batchName" required placeholder="e.g. Diwali Promo 2026" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
                         </div>
                         
-                        <!-- NEW BUDGET FIELD -->
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Reward Template (Slab)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Budget</label>
                             <select name="budgetId" id="budgetSelect" required onchange="updateBudgetInsights()" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">Select a template...</option>
+                                <option value="">Select a budget...</option>
                                 @{ var budgets = ViewBag.Budgets as List<QRRewardPlatform.Models.RewardSlab>; }
                                 @if (budgets != null)
                                 {
                                     @foreach (var b in budgets)
                                     {
-                                        <option value="@b.Id" data-budget="@b.TotalBudget" data-mode="@b.RandomMode" data-values="@b.AllowedRewardValues">
-                                            @b.Name (Batch Budget: ₹@b.TotalBudget.ToString("N0"))
+                                        <option value="@b.Id" data-budget="@b.TotalBudget" data-zero="@b.ZeroRewardAllowed.ToString().ToLower()">
+                                            @b.Name — ₹@b.TotalBudget.ToString("N0")
                                         </option>
                                     }
                                 }
@@ -158,8 +157,8 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Distribution</label>
                             <div class="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center gap-2">
-                                <i class="fas fa-magic text-indigo-500"></i>
-                                <span id="lblDistributionMode">Template Default</span>
+                                <i class="fas fa-random text-indigo-500"></i>
+                                <span>Random (Auto)</span>
                             </div>
                         </div>
                     </div>
@@ -171,33 +170,28 @@
                     
                     <div id="insightPlaceholder" class="text-xs text-indigo-400 italic text-center my-auto">
                         <i class="fas fa-hand-pointer text-2xl mb-2 opacity-50 block"></i>
-                        Select a budget to see distribution insights
+                        Select a budget to see insights
                     </div>
                     
                     <div id="insightData" class="hidden space-y-4">
                         <div class="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm">
-                            <p class="text-xs text-gray-500 mb-0.5">Template Batch Budget</p>
-                            <p class="font-bold text-gray-900 text-lg" id="lblBatchBudget">₹0.00</p>
+                            <p class="text-xs text-gray-500 mb-0.5">Budget Amount</p>
+                            <p class="font-bold text-gray-900 text-lg" id="lblBatchBudget">₹0</p>
                         </div>
                         
                         <div class="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm">
-                            <p class="text-xs text-gray-500 mb-0.5">Coupons Requested</p>
+                            <p class="text-xs text-gray-500 mb-0.5">Coupons</p>
                             <p class="font-bold text-gray-900 text-lg" id="lblCount">0</p>
                         </div>
                         
                         <div class="bg-white p-3 rounded-lg border border-indigo-50 shadow-sm">
-                            <p class="text-xs text-gray-500 mb-0.5">Average Reward / Coupon</p>
-                            <p class="font-bold text-indigo-700 text-lg" id="lblAverage">₹0.00</p>
+                            <p class="text-xs text-gray-500 mb-0.5">Avg Reward / Coupon</p>
+                            <p class="font-bold text-indigo-700 text-lg" id="lblAverage">₹0</p>
                         </div>
                         
                         <div id="warningAlert" class="hidden mt-2 p-3 bg-red-100 text-red-700 rounded-lg text-xs font-medium border border-red-200 flex items-start gap-2">
                             <i class="fas fa-exclamation-triangle mt-0.5"></i>
-                            <span id="warningMsg">Warning message here</span>
-                        </div>
-
-                        <div class="bg-indigo-100 p-2 rounded-lg border border-indigo-200 shadow-sm mt-auto">
-                            <p class="text-[10px] text-indigo-700 font-bold uppercase tracking-wider mb-1">Configuration</p>
-                            <p class="text-[11px] text-indigo-900" id="lblRange">Values: Loading...</p>
+                            <span id="warningMsg"></span>
                         </div>
                     </div>
                 </div>
@@ -383,8 +377,6 @@
         const lblBatchBudget = document.getElementById('lblBatchBudget');
         const lblCount = document.getElementById('lblCount');
         const lblAverage = document.getElementById('lblAverage');
-        const lblDistributionMode = document.getElementById('lblDistributionMode');
-        const lblRange = document.getElementById('lblRange');
         const warningAlert = document.getElementById('warningAlert');
         const warningMsg = document.getElementById('warningMsg');
         const btnGenerate = document.getElementById('btnGenerate');
@@ -397,44 +389,22 @@
 
         const option = select.options[select.selectedIndex];
         const batchBudget = parseFloat(option.getAttribute('data-budget'));
-        const mode = option.getAttribute('data-mode');
-        const values = option.getAttribute('data-values');
         const count = parseInt(countInput.value) || 0;
 
         insightPlaceholder.classList.add('hidden');
         insightData.classList.remove('hidden');
 
-        lblBatchBudget.innerText = '₹' + batchBudget.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2});
+        lblBatchBudget.innerText = '₹' + batchBudget.toLocaleString(undefined, {maximumFractionDigits: 0});
         lblCount.innerText = count;
-        lblDistributionMode.innerText = mode + ' Random';
-        lblRange.innerText = 'Values: ' + values;
 
         if (count > 0) {
             const avg = batchBudget / count;
-            lblAverage.innerText = '₹' + avg.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits:2});
-            
-            // Validation logic
-            const valueArray = values.split(',').map(v => parseFloat(v.trim())).sort((a,b) => a-b);
-            const minV = valueArray[0];
-            const maxV = valueArray[valueArray.length - 1];
-
-            if (batchBudget < minV * count) {
-                warningAlert.classList.remove('hidden');
-                warningMsg.innerText = `Impossible! With ${count} coupons, you need at least ₹${(minV * count).toFixed(2)} based on your template's min reward (₹${minV}).`;
-                btnGenerate.disabled = true;
-                btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
-            } else if (batchBudget > maxV * count) {
-                warningAlert.classList.remove('hidden');
-                warningMsg.innerText = `Impossible! With ${count} coupons, you can distribute max ₹${(maxV * count).toFixed(2)} based on your template's max reward (₹${maxV}).`;
-                btnGenerate.disabled = true;
-                btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                warningAlert.classList.add('hidden');
-                btnGenerate.disabled = false;
-                btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            lblAverage.innerText = '₹' + avg.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            warningAlert.classList.add('hidden');
+            btnGenerate.disabled = false;
+            btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
         } else {
-            lblAverage.innerText = '₹0.00';
+            lblAverage.innerText = '₹0';
             warningAlert.classList.add('hidden');
             btnGenerate.disabled = true;
             btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');

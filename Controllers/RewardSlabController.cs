@@ -22,21 +22,14 @@ namespace QRRewardPlatform.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromForm] string name, [FromForm] decimal totalBudget, [FromForm] string validity, [FromForm] string campaignId, 
-            [FromForm] string allowedRewardValues, [FromForm] string rewardWeights, [FromForm] int maxHighRewardCount, 
-            [FromForm] bool zeroRewardAllowed, [FromForm] bool isReusable, [FromForm] string randomMode)
+        public async Task<IActionResult> Create([FromForm] string name, [FromForm] decimal totalBudget, [FromForm] string date, [FromForm] bool zeroRewardAllowed)
         {
-            var slab = new RewardSlab { 
-                Name = name, 
-                TotalBudget = totalBudget, 
-                Validity = validity ?? "",
-                CampaignId = campaignId ?? "",
-                AllowedRewardValues = allowedRewardValues ?? "0,2,5,10,20,50",
-                RewardWeights = rewardWeights ?? "",
-                MaxHighRewardCount = maxHighRewardCount,
+            var slab = new RewardSlab
+            {
+                Name = name,
+                TotalBudget = totalBudget,
+                Date = date ?? "",
                 ZeroRewardAllowed = zeroRewardAllowed,
-                IsReusable = isReusable,
-                RandomMode = randomMode ?? "Curiosity",
                 CreatedAt = DateTime.UtcNow.ToString("o")
             };
             await _slabService.CreateAsync(slab);
@@ -44,23 +37,15 @@ namespace QRRewardPlatform.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(string id, [FromForm] string name, [FromForm] decimal totalBudget, [FromForm] string validity, [FromForm] string campaignId,
-            [FromForm] string allowedRewardValues, [FromForm] string rewardWeights, [FromForm] int maxHighRewardCount, 
-            [FromForm] bool zeroRewardAllowed, [FromForm] bool isReusable, [FromForm] string randomMode)
+        public async Task<IActionResult> Edit(string id, [FromForm] string name, [FromForm] decimal totalBudget, [FromForm] string date, [FromForm] bool zeroRewardAllowed)
         {
             var existing = await _slabService.GetByIdAsync(id);
             if (existing == null) return NotFound();
 
             existing.Name = name;
             existing.TotalBudget = totalBudget;
-            existing.Validity = validity ?? "";
-            existing.CampaignId = campaignId ?? "";
-            existing.AllowedRewardValues = allowedRewardValues ?? "0,2,5,10,20,50";
-            existing.RewardWeights = rewardWeights ?? "";
-            existing.MaxHighRewardCount = maxHighRewardCount;
+            existing.Date = date ?? "";
             existing.ZeroRewardAllowed = zeroRewardAllowed;
-            existing.IsReusable = isReusable;
-            existing.RandomMode = randomMode ?? "Curiosity";
 
             await _slabService.UpdateAsync(id, existing);
             return RedirectToAction("Index");

@@ -35,17 +35,16 @@ namespace QRRewardPlatform.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Generate(string campaignId, int count, string batchName, string budgetId, string distribution)
+        public async Task<IActionResult> Generate(string campaignId, int count, string batchName, string budgetId)
         {
             var budget = await _slabService.GetByIdAsync(budgetId);
             if (budget == null) {
-                TempData["Error"] = "Reward Template not found.";
+                TempData["Error"] = "Budget not found.";
                 return RedirectToAction("Index", "Codes");
             }
 
-            // In the new concept, TotalBudget is the per-batch budget.
             decimal targetBudget = budget.TotalBudget;
-            
+
             var settings = await _settingsService.GetSettingsAsync();
             var baseUrl = settings.BaseRedeemUrl;
             if (string.IsNullOrEmpty(baseUrl))
@@ -53,172 +52,97 @@ namespace QRRewardPlatform.Controllers
 
             var batchId = $"BATCH-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-            // 1. Parse Allowed Values
-            var allowedValues = (budget.AllowedRewardValues ?? "0,2,5,10,20,50")
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(v => decimal.TryParse(v.Trim(), out var d) ? d : -1)
-                .Where(d => d >= 0)
-                .OrderBy(v => v).ToList();
-
-            if (!budget.ZeroRewardAllowed) allowedValues.RemoveAll(v => v == 0);
-            if (!allowedValues.Any()) allowedValues.Add(2m); // Minimum fallback
-
-            // 2. Parse Weights
-            var rawWeights = (budget.RewardWeights ?? "")
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(v => double.TryParse(v.Trim(), out var w) ? w : 1.0)
-                .ToList();
-            
-            // Normalize weights to match allowedValues count
-            var finalWeights = new List<double>();
-            for (int i = 0; i < allowedValues.Count; i++) {
-                finalWeights.Add(i < rawWeights.Count ? rawWeights[i] : 1.0);
-            }
-
-            // 3. True Curiosity-Based Weighted Randomness Algorithm
-            var amounts = new List<decimal>();
-            Random rnd = new Random();
-
-            // Safety check: Is batch budget even possible?
-            decimal minPossible = allowedValues.Min() * count;
-            decimal maxPossible = allowedValues.Max() * count;
-            
-            if (targetBudget < minPossible || targetBudget > maxPossible) {
-                TempData["Error"] = $"Budget ₹{targetBudget} is impossible for {count} coupons with allowed rewards (Min: ₹{minPossible}, Max: ₹{maxPossible}).";
+            if (count <= 0) {
+                TempData["Error"] = "Coupon count must be at least 1.";
                 return RedirectToAction("Index", "Codes");
             }
 
-            int highRewardCount = 0;
-            decimal actualMaxAllowedValue = allowedValues.Max();
-            decimal currentRemainingBudget = targetBudget;
+            // ===== SIMPLE RANDOM DISTRIBUTION =====
+            // No fixed reward values, no weights, no complex criteria.
+            // Just pure randomness scaled to match the budget.
 
-            // Generate rewards one by one, ensuring guaranteed reachability of the budget at every step.
-            for (int i = 0; i < count; i++) {
-                int remainingCoupons = count - i - 1;
-                
-                var currentAllowed = new List<decimal>(allowedValues);
-                if (budget.MaxHighRewardCount > 0 && highRewardCount >= budget.MaxHighRewardCount) {
-                    currentAllowed.Remove(actualMaxAllowedValue);
-                }
-                
-                if (!currentAllowed.Any()) currentAllowed = new List<decimal>(allowedValues);
+            var rnd = new Random();
+            var amounts = new List<decimal>();
 
-                decimal currentMinVal = currentAllowed.Min();
-                decimal currentMaxVal = currentAllowed.Max();
-                
-                var validValues = new List<decimal>();
-                var validWeights = new List<double>();
-                
-                for (int vIdx = 0; vIdx < currentAllowed.Count; vIdx++) {
-                    decimal v = currentAllowed[vIdx];
-                    double w = finalWeights[allowedValues.IndexOf(v)];
-                    
-                    decimal budgetAfter = currentRemainingBudget - v;
-                    decimal minPossibleAfter = remainingCoupons * currentMinVal;
-                    
-                    decimal trueMaxPossibleAfter = 0;
-                    if (budget.MaxHighRewardCount > 0 && currentMaxVal == actualMaxAllowedValue) {
-                        int allowedHighsLeft = budget.MaxHighRewardCount - highRewardCount - (v == actualMaxAllowedValue ? 1 : 0);
-                        int highsToUse = Math.Max(0, Math.Min(remainingCoupons, allowedHighsLeft));
-                        int othersToUse = remainingCoupons - highsToUse;
-                        decimal sndMax = currentAllowed.Where(x => x < actualMaxAllowedValue).DefaultIfEmpty(currentMinVal).Max();
-                        trueMaxPossibleAfter = (highsToUse * actualMaxAllowedValue) + (othersToUse * sndMax);
-                    } else {
-                        trueMaxPossibleAfter = remainingCoupons * currentMaxVal;
-                    }
-                    
-                    if (budgetAfter >= minPossibleAfter && budgetAfter <= trueMaxPossibleAfter) {
-                        validValues.Add(v);
-                        validWeights.Add(w);
-                    }
-                }
-                
-                if (validValues.Count == 0) {
-                    // Absolute fallback if no perfectly safe value found (due to combination 'holes')
-                    decimal midPoint = remainingCoupons > 0 ? currentRemainingBudget / remainingCoupons : currentRemainingBudget;
-                    decimal closest = currentAllowed.OrderBy(v => Math.Abs(v - midPoint)).First();
-                    validValues.Add(closest);
-                    validWeights.Add(1.0);
-                }
-                
-                double totalWeight = validWeights.Sum();
-                double r = rnd.NextDouble() * totalWeight;
-                double cumulative = 0;
-                decimal selectedValue = validValues.Last(); // Default to last
-                for (int j = 0; j < validValues.Count; j++) {
-                    cumulative += validWeights[j];
-                    if (r <= cumulative) {
-                        selectedValue = validValues[j];
-                        break;
-                    }
-                }
-                
-                amounts.Add(selectedValue);
-                currentRemainingBudget -= selectedValue;
-                if (selectedValue == actualMaxAllowedValue) {
-                    highRewardCount++;
-                }
-            }
-
-            // Final exact matching loop to guarantee ledger balances exactly if there are any tiny holes
-            decimal currentSum = amounts.Sum();
-            int failsafe = 0;
-            while (currentSum != targetBudget && failsafe < count * 10)
+            // Step 1: Generate raw random numbers using exponential distribution.
+            // This naturally creates curiosity: most values are small, a few are big.
+            var rawValues = new double[count];
+            for (int i = 0; i < count; i++)
             {
-                failsafe++;
-                int idx = rnd.Next(count);
-                decimal oldVal = amounts[idx];
-                
-                if (currentSum < targetBudget) {
-                    var possibleIncreases = allowedValues.Where(v => v > oldVal && currentSum + (v - oldVal) <= targetBudget).ToList();
-                    if (possibleIncreases.Any()) {
-                        decimal newVal = possibleIncreases[rnd.Next(possibleIncreases.Count)];
-                        amounts[idx] = newVal;
-                        currentSum += (newVal - oldVal);
-                    }
-                } else {
-                    var possibleDecreases = allowedValues.Where(v => v < oldVal && currentSum - (oldVal - v) >= targetBudget).ToList();
-                    if (possibleDecreases.Any()) {
-                        decimal newVal = possibleDecreases[rnd.Next(possibleDecreases.Count)];
-                        amounts[idx] = newVal;
-                        currentSum -= (oldVal - newVal);
+                double u = rnd.NextDouble();
+                rawValues[i] = -Math.Log(1.0 - u * 0.999); // exponential distribution
+            }
+
+            // Step 2: If zero reward is allowed, randomly assign ~10-25% of coupons as ₹0
+            if (budget.ZeroRewardAllowed)
+            {
+                int zeroCount = rnd.Next((int)(count * 0.10), (int)(count * 0.25) + 1);
+                var zeroIndices = Enumerable.Range(0, count).OrderBy(_ => rnd.Next()).Take(zeroCount).ToList();
+                foreach (var idx in zeroIndices)
+                {
+                    rawValues[idx] = 0;
+                }
+            }
+
+            // Step 3: Scale raw values so they sum to exactly targetBudget
+            double rawSum = rawValues.Sum();
+
+            if (rawSum == 0)
+            {
+                // Edge case: all ended up zero — put entire budget on one random coupon
+                for (int i = 0; i < count; i++) amounts.Add(0m);
+                amounts[rnd.Next(count)] = targetBudget;
+            }
+            else
+            {
+                // Scale and round to whole rupees
+                decimal allocated = 0m;
+                for (int i = 0; i < count; i++)
+                {
+                    decimal scaled = Math.Round((decimal)(rawValues[i] / rawSum) * targetBudget, 0);
+                    amounts.Add(scaled);
+                    allocated += scaled;
+                }
+
+                // Step 4: Fix rounding difference by adjusting random coupons ₹1 at a time
+                decimal diff = targetBudget - allocated;
+                int direction = diff > 0 ? 1 : -1;
+                int adjustments = (int)Math.Abs(diff);
+                for (int a = 0; a < adjustments; a++)
+                {
+                    int tries = 0;
+                    while (tries < count * 2)
+                    {
+                        int idx = rnd.Next(count);
+                        if (amounts[idx] + direction >= 0)
+                        {
+                            amounts[idx] += direction;
+                            break;
+                        }
+                        tries++;
                     }
                 }
             }
 
-            if (currentSum != targetBudget) {
-                // Force an exact match on a random element to guarantee accounting rule
-                decimal diff = targetBudget - currentSum;
-                int startIdx = rnd.Next(count);
-                for (int i = 0; i < count; i++) {
-                    int tryIdx = (startIdx + i) % count;
-                    if (amounts[tryIdx] + diff >= 0) {
-                         amounts[tryIdx] += diff;
-                         break;
-                    }
-                }
+            // Step 5: Final shuffle so there's absolutely no pattern
+            int n = amounts.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rnd.Next(n + 1);
+                (amounts[k], amounts[n]) = (amounts[n], amounts[k]);
             }
 
-            // Final Shuffle for maximum curiosity and zero predictability
-            int n = amounts.Count;  
-            while (n > 1) {  
-                n--;  
-                int k = rnd.Next(n + 1);  
-                decimal value = amounts[k];  
-                amounts[k] = amounts[n];  
-                amounts[n] = value;  
-            }
+            // ===== END DISTRIBUTION =====
 
             var generatedIds = await _codeService.GenerateCodesAsync(campaignId, count, baseUrl, batchId, batchName, budgetId, amounts);
 
-            // Update budget tracker - Allocated is now lifetime total
+            // Update lifetime tracking
             budget.AllocatedAmount += targetBudget;
             budget.GeneratedCoupons += count;
             await _slabService.UpdateAsync(budget.Id, budget);
 
-            // Offload QR Code generation and ImgBB uploading to an async background task
-            // This prevents the HTTP request from timing out on large batches (e.g. 100+ images)
-            // Services used here are registered as Singletons so capturing them in Task.Run is safe.
+            // Background: generate QR images and upload to ImgBB
             _ = Task.Run(async () => {
                 foreach (var id in generatedIds)
                 {
@@ -229,22 +153,19 @@ namespace QRRewardPlatform.Controllers
                             var url = $"{baseUrl}?code={code.Code}";
                             var qrBytes = _qrService.GenerateQRCode(url, code.Code);
                             var imgbbUrl = await _imgbbService.UploadImageAsync(qrBytes, $"QR_{code.Code}");
-                            
                             if (!string.IsNullOrEmpty(imgbbUrl))
                             {
                                 await _codeService.UpdateQRUrlAsync(id, imgbbUrl);
                             }
                         }
                     } catch (Exception ex) {
-                        Console.WriteLine($"Background QR generation failed for ID {id}: {ex.Message}");
+                        Console.WriteLine($"Background QR upload failed for {id}: {ex.Message}");
                     }
-                    
-                    // Add a tiny delay to help avoid hitting ImgBB or Firebase rate limits on large batches
                     await Task.Delay(100);
                 }
             });
 
-            TempData["Message"] = $"Successfully generated {generatedIds.Count} QR codes in the database. QR images and ImgBB uploads will process in the background.";
+            TempData["Message"] = $"Successfully generated {generatedIds.Count} QR codes. QR images will upload in the background.";
             TempData["GeneratedBatch"] = batchId;
 
             return RedirectToAction("Index", "Codes");
