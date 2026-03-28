@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Redemptions";
+}
+@model List<QRRewardPlatform.Models.Redemption>
+
+@{
+    var campaigns = ViewBag.Campaigns as List<QRRewardPlatform.Models.Campaign>;
+    string selectedCampaign = ViewBag.SelectedCampaign ?? "";
+    string selectedStatus = ViewBag.SelectedStatus ?? "";
+}
+
+<!-- Filters -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
+    <form method="get" class="flex flex-wrap items-end gap-4">
+        <div class="flex-1 min-w-48">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Campaign</label>
+            <!select name="campaignId" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <!option value="">All Campaigns</!option>
+                @if (campaigns != null)
+                {
+                    @foreach (var c in campaigns)
+                    {
+                        if (selectedCampaign == c.Id)
+                        {
+                            <!option value="@c.Id" selected="selected">@c.Name</!option>
+                        }
+                        else
+                        {
+                            <!option value="@c.Id">@c.Name</!option>
+                        }
+                    }
+                }
+            </!select>
+        </div>
+        <div class="w-36">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Payout Status</label>
+            <!select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <!option value="">All</!option>
+                @if (selectedStatus == "Pending")
+                {
+                    <!option value="Pending" selected="selected">Pending</!option>
+                }
+                else
+                {
+                    <!option value="Pending">Pending</!option>
+                }
+                @if (selectedStatus == "Paid")
+                {
+                    <!option value="Paid" selected="selected">Paid</!option>
+                }
+                else
+                {
+                    <!option value="Paid">Paid</!option>
+                }
+            </!select>
+        </div>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-xl hover:bg-indigo-700 transition">
+            <i class="fas fa-search mr-1"></i> Filter
+        </button>
+    </form>
+</div>
+
+<!-- Redemptions Table -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-900">Redemptions (@Model.Count)</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mobile</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">UPI Number</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reward</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payout</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var r in Model)
+                {
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 font-medium text-gray-900">@r.UserName</td>
+                        <td class="px-6 py-3 text-gray-600">@r.MobileNumber</td>
+                        <td class="px-6 py-3 text-gray-600">@r.UpiNumber</td>
+                        <td class="px-6 py-3 font-semibold text-green-700">₹@r.RewardAmount.ToString("N2")</td>
+                        <td class="px-6 py-3 text-gray-500 text-xs">@(r.RedemptionDate.Length > 10 ? r.RedemptionDate[..10] : r.RedemptionDate)</td>
+                        <td class="px-6 py-3">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full badge-@r.PayoutStatus.ToLower()">@r.PayoutStatus</span>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">No redemptions found</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

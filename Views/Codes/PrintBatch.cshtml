@@ -1,0 +1,139 @@
+@model List<QRRewardPlatform.Models.RedemptionCode>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Print QR Codes Batch</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #f1f5f9;
+        }
+        .controls {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-print {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-print:hover { background: #4338ca; }
+        
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            margin: 20px auto;
+            padding: 15mm;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            page-break-after: always;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 10px;
+            height: 100%;
+        }
+
+        .qr-card {
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .qr-card-logo {
+            height: 24px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .qr-image {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .qr-code-text {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            letter-spacing: 1px;
+        }
+
+        @@media print {
+            body { background: transparent; }
+            .controls { display: none !important; }
+            .page {
+                margin: 0;
+                padding: 10mm;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls no-print">
+        <div>
+            <h2 style="font-size: 18px; color: #1e293b; margin-bottom: 4px;">Print QR Codes</h2>
+            <p style="font-size: 14px; color: #64748b;">Total Codes: @Model.Count</p>
+        </div>
+        <button onclick="window.print()" class="btn-print">
+            Print Batch
+        </button>
+    </div>
+
+    @{
+        int itemsPerPage = 20;
+        int totalPages = (int)Math.Ceiling((double)Model.Count / itemsPerPage);
+
+        for (int p = 0; p < totalPages; p++)
+        {
+            var pageItems = Model.Skip(p * itemsPerPage).Take(itemsPerPage).ToList();
+            <div class="page">
+                <div class="grid-container">
+                    @foreach (var code in pageItems)
+                    {
+                        <div class="qr-card">
+                            <img src="/images/logo.png" alt="Logo" class="qr-card-logo" onerror="this.style.display='none'" />
+                            @{
+                                string qrLink = string.IsNullOrEmpty(code.QRUrl) ? (Url.Action("DownloadQR", "QRCode", new { code = code.Code }) ?? "") : code.QRUrl;
+                            }
+                            <img src="@qrLink" class="qr-image" />
+                            <div class="qr-code-text">@code.Code</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</body>
+</html>

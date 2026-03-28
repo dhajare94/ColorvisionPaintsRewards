@@ -1,0 +1,11 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\ADMIN\QRRewardPlatform\Views\Redeem\Index.cshtml(39,6): error CS0103: The name 'keyframes' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+
+Build FAILED.
+
+C:\ADMIN\QRRewardPlatform\Views\Redeem\Index.cshtml(39,6): error CS0103: The name 'keyframes' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.56

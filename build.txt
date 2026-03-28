@@ -1,0 +1,27 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(30,65): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(100,58): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(66,28): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(227,67): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(257,66): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(261,49): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(118,28): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(276,71): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(282,42): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+
+Build FAILED.
+
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(66,28): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(118,28): warning CS8600: Converting null literal or possible null value to non-nullable type. [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(30,65): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(100,58): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(227,67): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(257,66): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(261,49): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(276,71): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+C:\ADMIN\QRRewardPlatform\Services\RedemptionService.cs(282,42): error CS0103: The name 'Node' does not exist in the current context [C:\ADMIN\QRRewardPlatform\QRRewardPlatform.csproj]
+    2 Warning(s)
+    7 Error(s)
+
+Time Elapsed 00:00:01.68

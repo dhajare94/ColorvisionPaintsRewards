@@ -1,0 +1,11 @@
+﻿MSBuild version 17.8.31+af11d4f25 for .NET
+  Determining projects to restore...
+C:\Program Files\dotnet\sdk\8.0.118\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets(166,5): error NETSDK1045: The current .NET SDK does not support targeting .NET 10.0.  Either target .NET 8.0 or lower, or use a version of the .NET SDK that supports .NET 10.0. Download the .NET SDK from https://aka.ms/dotnet/download [D:\ColorvisionPaintsRewards-main\ColorvisionPaintsRewards-main\QRRewardPlatform.csproj]
+
+Build FAILED.
+
+C:\Program Files\dotnet\sdk\8.0.118\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets(166,5): error NETSDK1045: The current .NET SDK does not support targeting .NET 10.0.  Either target .NET 8.0 or lower, or use a version of the .NET SDK that supports .NET 10.0. Download the .NET SDK from https://aka.ms/dotnet/download [D:\ColorvisionPaintsRewards-main\ColorvisionPaintsRewards-main\QRRewardPlatform.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.63

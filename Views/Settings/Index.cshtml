@@ -1,0 +1,184 @@
+@{
+    ViewData["Title"] = "Settings";
+}
+@model QRRewardPlatform.Models.AppSettings
+
+@{
+    var admins = ViewBag.Admins as List<QRRewardPlatform.Models.AdminUser>;
+}
+
+<div class="max-w-4xl space-y-6">
+    <!-- System Settings -->
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">System Settings</h3>
+        <form method="post" action="/Settings/Save" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Firebase Database URL</label>
+                    <input type="text" name="FirebaseUrl" value="@Model.FirebaseUrl" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Base Redeem URL</label>
+                    <input type="text" name="BaseRedeemUrl" value="@Model.BaseRedeemUrl" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Default Campaign Days</label>
+                    <input type="number" name="DefaultCampaignDays" value="@Model.DefaultCampaignDays" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reward Rounding Rule</label>
+                    <!select name="RewardRoundingRule" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
+                        @if (Model.RewardRoundingRule == "floor")
+                        {
+                            <!option value="floor" selected="selected">Floor (Round Down)</!option>
+                        }
+                        else
+                        {
+                            <!option value="floor">Floor (Round Down)</!option>
+                        }
+                        @if (Model.RewardRoundingRule == "ceil")
+                        {
+                            <!option value="ceil" selected="selected">Ceil (Round Up)</!option>
+                        }
+                        else
+                        {
+                            <!option value="ceil">Ceil (Round Up)</!option>
+                        }
+                        @if (Model.RewardRoundingRule == "round")
+                        {
+                            <!option value="round" selected="selected">Round (Nearest)</!option>
+                        }
+                        else
+                        {
+                            <!option value="round">Round (Nearest)</!option>
+                        }
+                    </!select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Instagram Page URL</label>
+                    <input type="text" name="InstagramUrl" value="@Model.InstagramUrl" placeholder="https://instagram.com/yourpage" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+                </div>
+            </div>
+            
+            <div class="mt-6 border-t border-gray-100 pt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password (Required to save)</label>
+                <input type="password" name="currentPassword" required class="w-full max-w-sm px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" />
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
+                    <i class="fas fa-save mr-1"></i> Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Admin Management -->
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Admin Users</h3>
+            <button onclick="openModal('addAdminModal')" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
+                <i class="fas fa-user-plus mr-1"></i> Add Admin
+            </button>
+        </div>
+        <div class="space-y-3">
+            @if (admins != null)
+            {
+                @foreach (var admin in admins)
+                {
+                    <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <i class="fas fa-user text-indigo-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">@admin.DisplayName</p>
+                                <p class="text-xs text-gray-500">@@admin.Username · @admin.Role</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs text-gray-400">@(string.IsNullOrEmpty(admin.LastLogin) ? "Never logged in" : "Last: " + (admin.LastLogin.Length > 10 ? admin.LastLogin[..10] : admin.LastLogin))</span>
+                            @if (admin.Username != User.Identity?.Name)
+                            {
+                                <form method="post" action="/Settings/DeleteAdmin" class="inline">
+                                    <input type="hidden" name="id" value="@admin.Id" />
+                                    <button type="submit" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Danger Zone (Factory Reset) -->
+    <div class="glass-card rounded-2xl border border-red-200 shadow-sm p-6 bg-red-50">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-red-700">Factory Reset</h3>
+                <p class="text-xs text-red-600 mt-1">Permanently delete all codes, campaigns, redemptions, settings, and payouts.</p>
+            </div>
+            <button type="button" onclick="openModal('resetSystemModal')" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Reset System
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Admin Modal -->
+<div id="addAdminModal" class="fixed inset-0 z-50 hidden modal-overlay flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900">Add Admin User</h3>
+            <button onclick="closeModal('addAdminModal')" class="p-1 hover:bg-gray-100 rounded-lg"><i class="fas fa-times text-gray-400"></i></button>
+        </div>
+        <form method="post" action="/Settings/CreateAdmin" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+                <input type="text" name="displayName" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input type="text" name="username" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <option value="Admin">Admin (Full Access)</option>
+                    <option value="User">User (No Settings Access)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" name="password" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeModal('addAdminModal')" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">Create Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Factory Reset Modal -->
+<div id="resetSystemModal" class="fixed inset-0 z-50 hidden modal-overlay flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="text-lg font-bold text-red-600">DANGER: Factory Reset</h3>
+            <button onclick="closeModal('resetSystemModal')" class="p-1 hover:bg-gray-100 rounded-lg"><i class="fas fa-times text-gray-400"></i></button>
+        </div>
+        <form method="post" action="/Settings/FactoryReset" class="p-6 space-y-4">
+            <p class="text-sm text-gray-600">You are about to wipe the entire database. This cannot be undone. Enter your admin password to confirm.</p>
+            <div>
+                <input type="password" name="password" placeholder="Admin Password" required class="w-full px-4 py-2.5 border border-red-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeModal('resetSystemModal')" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition">Wipe Everything</button>
+            </div>
+        </form>
+    </div>
+</div>

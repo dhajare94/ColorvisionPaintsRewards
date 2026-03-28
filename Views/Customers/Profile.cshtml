@@ -1,0 +1,121 @@
+@model QRRewardPlatform.Models.Customer
+@{
+    ViewData["Title"] = "Customer Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var redemptions = ViewBag.Redemptions as List<QRRewardPlatform.Models.Redemption> ?? new List<QRRewardPlatform.Models.Redemption>();
+    var campaigns = ViewBag.Campaigns as List<QRRewardPlatform.Models.Campaign>;
+}
+
+<!-- Profile Header -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+    <div class="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full gradient-bg flex items-center justify-center shadow-lg">
+                <span class="text-white text-2xl font-bold">@Model.Name?.FirstOrDefault()</span>
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">@Model.Name</h2>
+                <div class="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                    <span class="flex items-center gap-1"><i class="fas fa-phone text-indigo-400"></i> @Model.MobileNumber</span>
+                    <span class="flex items-center gap-1"><i class="fas fa-map-marker-alt text-red-400"></i> @Model.City, @Model.District</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a href="/Customers/Edit/@Model.Id" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition">
+                <i class="fas fa-edit mr-1"></i> Edit Profile
+            </a>
+            <a href="/Customers" class="px-4 py-2 bg-indigo-50 text-indigo-700 text-sm font-medium rounded-xl hover:bg-indigo-100 transition">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Customers
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6 stat-card">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total Bags</p>
+                <p class="text-2xl font-bold text-gray-900">@ViewBag.TotalBags</p>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6 stat-card">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                <i class="fas fa-gift"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total Redemptions</p>
+                <p class="text-2xl font-bold text-gray-900">@redemptions.Count</p>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6 stat-card">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center text-xl">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total Payout</p>
+                <p class="text-2xl font-bold text-gray-900">₹@ViewBag.TotalAmount.ToString("N0")</p>
+            </div>
+        </div>
+    </div>
+    <div class="glass-card rounded-2xl border border-gray-100 shadow-sm p-6 stat-card">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Rank & Category</p>
+                <p class="text-sm font-bold text-gray-900 mt-1">@Model.Rank <span class="text-xs font-normal bg-gray-100 text-gray-600 px-2 py-0.5 rounded ml-1">@Model.Category</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full Redemption History -->
+<div class="glass-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="font-semibold text-gray-900">Redemption History</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Budget</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reward</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payout</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                @foreach (var r in redemptions)
+                {
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-mono font-medium text-gray-900">@r.RedemptionBatchId</td>
+                        <td class="px-6 py-4 text-gray-600">@(campaigns?.FirstOrDefault(c => c.Id == r.CampaignId)?.Name ?? r.CampaignId)</td>
+                        <td class="px-6 py-4 text-indigo-600 font-medium text-xs">@((ViewBag.Budgets as List<QRRewardPlatform.Models.RewardSlab>)?.FirstOrDefault(b => b.Id == r.BudgetId)?.Name ?? "Legacy")</td>
+                        <td class="px-6 py-4 font-semibold text-green-700">₹@r.RewardAmount.ToString("N2")</td>
+                        <td class="px-6 py-4 text-gray-500 text-xs">@(r.RedemptionDate.Length > 10 ? r.RedemptionDate[..10] : r.RedemptionDate)</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full badge-@r.PayoutStatus.ToLower()">@r.PayoutStatus</span>
+                        </td>
+                    </tr>
+                }
+                @if (!redemptions.Any())
+                {
+                    <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">No redemption history found for this customer.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
